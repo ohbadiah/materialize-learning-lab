@@ -24,10 +24,12 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - id: pages
+        uses: actions/configure-pages@v5
       - run: npm run build
         env:
           GITHUB_PAGES: 'true'
-      - uses: actions/configure-pages@v5
+          SITE_URL: ${{ steps.pages.outputs.base_url }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

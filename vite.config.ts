@@ -6,6 +6,10 @@ import { documentTitle, staticRoutes, SITE_TITLE, type StaticRoute } from './src
 const escapeHtml = (text: string) =>
   text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
+// Absolute site URL without a trailing slash, as actions/configure-pages reports it. Link
+// previews need absolute URLs, so og:url and og:image are only emitted when it's known.
+const siteUrl = process.env.SITE_URL;
+
 function withRouteHead(html: string, route: StaticRoute) {
   const title = escapeHtml(documentTitle(route));
   const description = escapeHtml(route.description);
@@ -14,6 +18,14 @@ function withRouteHead(html: string, route: StaticRoute) {
     `<meta property="og:title" content="${escapeHtml(route.title ?? SITE_TITLE)}" />`,
     `<meta property="og:description" content="${description}" />`,
     `<meta property="og:type" content="website" />`,
+    ...(siteUrl
+      ? [
+          // Pages redirects /faq to /faq/, so the canonical URL has the trailing slash.
+          `<meta property="og:url" content="${escapeHtml(`${siteUrl}${route.path === '/' ? '/' : `${route.path}/`}`)}" />`,
+          `<meta property="og:image" content="${escapeHtml(`${siteUrl}${route.image}`)}" />`,
+          `<meta name="twitter:card" content="summary_large_image" />`,
+        ]
+      : []),
   ].join('\n    ');
   return html
     .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
